@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Adobe Decision Rendering Demo</title>
+    <style>
+      #heroImage {
+        width: 400px;
+        height: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Home Page</h1>
+
+    <!-- Image placement -->
+    <img id="heroImage" alt="Hero Offer" />
+
+    <!-- Text placement -->
+    <div id="heroText">Default text</div>
+
+    <script>
+      // 1) This is your decisions JSON (mocked for demo)
+      const decisionsResponse = {
+        payload: [
+          {
+            activity: { name: "Q19251Rec" },
+            placement: {
+              name: "Main_Web_Hero_TXT",
+              componentType: "https://ns.adobe.com/experience/offer-management/content-component-text"
+            },
+            items: [
+              {
+                name: "Premium Tech Event",
+                data: {
+                  format: "text/plain",
+                  content: "Up to 52% off on PCs and accessories!"
+                }
+              }
+            ]
+          },
+          {
+            activity: { name: "Q19251Rec" },
+            placement: {
+              name: "Main_Web_Hero_IMG",
+              componentType: "https://ns.adobe.com/experience/offer-management/content-component-imagelink"
+            },
+            items: [
+              {
+                name: "ExpA Hero LOQ",
+                data: {
+                  format: "image/png",
+                  deliveryURL: "https://placekitten.com/400/200",
+                  linkURL: "https://example.com/promo"
+                }
+              }
+            ]
+          }
+        ]
+      };
+
+      // 2) Extract payload
+      const { payload } = decisionsResponse;
+
+      // 3) Filter by activity name
+      function getDecisionsByActivityName(arr, activityName) {
+        return arr.filter(entry => entry.activity.name === activityName);
+      }
+      const targetActivityName = "Q19251Rec";
+      const myDecisions = getDecisionsByActivityName(payload, targetActivityName);
+
+      // 4) Define mapping of placement -> CSS selector
+      const placementToSelectorMap = {
+        "Main_Web_Hero_TXT": "#heroText",
+        "Main_Web_Hero_IMG": "#heroImage"
+      };
+
+      // 5) Render function
+      function renderDecisions(decisions, map) {
+        decisions.forEach(decision => {
+          const { placement, items } = decision;
+          const [item] = items;
+          const { name: placementName, componentType } = placement;
+
+          const selector = map[placementName];
+          if (!selector) return;
+
+          const element = document.querySelector(selector);
+          if (!element) return;
+
+          if (componentType.includes("imagelink")) {
+            // If it's an image
+            const { deliveryURL, linkURL } = item.data;
+            element.src = deliveryURL;
+            // If you'd like to set a link, find a parent <a> or something similar
+          } else if (componentType.includes("text")) {
+            // If it's text
+            const { content } = item.data;
+            element.textContent = content;
+          }
+        });
+      }
+
+      // 6) Render them
+      renderDecisions(myDecisions, placementToSelectorMap);
+    </script>
+  </body>
+</html>
